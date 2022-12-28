@@ -1,6 +1,8 @@
 import Head from 'next/head';
+import Image from 'next/image';
 
 import Banner from '../components/Banner';
+import Card from '../components/UI/Card';
 import styles from '../styles/Home.module.css';
 
 export default function Home() {
@@ -17,6 +19,12 @@ export default function Home() {
 
       <main className={styles.main}>
         <Banner buttonText="View stores nearby" onClick={onClickBannerBtnHandler} />
+        <div className={styles.heroImage}>
+          <Image src="/images/hero-image.png" width={700} height={400} alt="Hero Image" />
+        </div>
+        <div className={styles.cardLayout}>
+          <Card className={styles.card} />
+        </div>
       </main>
     </div>
   );
