@@ -1,6 +1,6 @@
 /** By default, this is a mobile breakpoint **/
 .container {
-  margin-bottom: 1rem;
+  margin-bottom: 6rem;
   position: relative;
   z-index: 2;
 }
@@ -20,7 +20,7 @@
 
 .title2 {
   display: block;
-  color:var(--text-dark-blue);
+  color: var(--text-purple);
 }
 
 .subTitle {
@@ -36,7 +36,7 @@
 }
 
 .button {
-  background-color: var(--text-dark-blue);
+  background-color: var(--text-purple-dark);
   cursor: pointer;
   color: white;
   outline: 0;
@@ -51,7 +51,7 @@
 }
 
 .button:hover {
-  background-color: var(--text-dark-blue);
+  background-color: var(--text-purple-dark);
 }
 
 /** 

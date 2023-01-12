@@ -7,7 +7,7 @@ import styles from './card.module.css';
 function Card(props) {
   return (
     <Link href={props.href}>
-      <a className={styles.cardLink}>
+      <div className={styles.cardLink}>
         <div className={cls("glass", styles.container)}>
           <div className={styles.cardHeaderWrapper}>
             <h2 className={styles.cardHeader}>{props.name}</h2>
@@ -18,10 +18,11 @@ function Card(props) {
               src={props.imgUrl}
               width={260}
               height={160}
+              alt={props.name}
             />
           </div>
         </div>
-      </a>
+      </div>
     </Link>
   );
 };
