@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router';
+import { useContext, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -6,18 +7,20 @@ import cls from 'classnames';
 
 import styles from '../../styles/coffee-store.module.css';
 import { fetchCoffeeStores } from '../../lib/coffee-stores';
+import { StoreContext } from '../../store/store-context';
+import { isEmpty } from '../../utils/util';
 
 export async function getStaticProps(staticProps) {
   const coffeeStores = await fetchCoffeeStores();
 
-  const coffeeStore = coffeeStores.find((coffeeStore) => {
+  const coffeeStoreById = coffeeStores.find((coffeeStore) => {
     const params = staticProps.params;
     return coffeeStore.id.toString() === params.id;
   });
 
   return {
     props: {
-      coffeeStore
+      coffeeStore: coffeeStoreById ? coffeeStoreById : {}
     },
   };
 }
@@ -37,14 +40,29 @@ export async function getStaticPaths() {
   };
 }
 
-function CoffeeStore (props) {
+function CoffeeStore (initialProps) {
+  const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore || {});
   const router = useRouter();
 
   if (router.isFallback) {
     return <div> Loading...</div>;
   }
 
-  const { address, neighbourhood, name,  imgUrl } = props.coffeeStore;
+  const id = router.query.id;
+  const { state: { coffeeStores } } = useContext(StoreContext);
+
+  useEffect(() => {
+    if (isEmpty(initialProps.coffeeStore)) {
+      if (coffeeStores.length > 0) {
+        const coffeeStoreById = coffeeStores.find((coffeeStore) => {
+          return coffeeStore.id.toString() === id; //dynamic id
+        });
+        setCoffeeStore(coffeeStoreById);
+      }
+    }
+  }, [id, initialProps.coffeeStore, coffeeStores]);
+
+  const { address, neighbourhood, name,  imgUrl } = coffeeStore;
 
   function handleUpVoteButton () {
     console.log("handleUpVoteButton");
@@ -72,19 +90,19 @@ function CoffeeStore (props) {
               width={600}
               height={360}
               className={styles.storeImg}
-              alt={name}
+              alt={name || 'coffee store image'}
             ></Image>
           </div>
         </div>
         <div className={cls("glass", styles.col2)}>
           <div className={styles.iconWrapper}>
-            <Image src="/images/icons/places.svg" width="24" height="24" alt="" />
+            <Image src="/images/icons/places.svg" width="24" height="24" alt="places icon" />
             <p className={styles.text}>{address}</p>
           </div>
 
           {neighbourhood && (
             <div className={styles.iconWrapper}>
-              <Image src="/images/icons/nearMe.svg" width="24" height="24" alt="" />
+              <Image src="/images/icons/nearMe.svg" width="24" height="24" alt="near me icon" />
               <p className={styles.text}>{neighbourhood}</p>
             </div>
           )}
