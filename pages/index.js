@@ -15,25 +15,27 @@ export default function Home(props) {
     locationErrorMsg, 
     isFindingLocation 
   } = useTrackLocation();
-  //const [coffeeStores, setCoffeeStores] = useState('');
+  const [coffeeStoresError, setCoffeeStoresError] = useState(null);
 
   const { dispatch, state } = useContext(StoreContext); 
   const { coffeeStores, latLong } = state;
-
-  console.log({ latLong, locationErrorMsg });
 
   useEffect(() => {
     async function setCoffeeStoresByLocation() {
       if (latLong) {
         try {
-          const fetchedCoffeeStores = await fetchCoffeeStores(latLong, 30);
+          const response = await fetch(
+            `/api/getCoffeeStoreByLocation?latLong=${latLong}&limit=30`
+          );
+          const coffeeStores = await response.json();
           dispatch({
             type: ACTION_TYPES.SET_COFFEE_STORES,
-            payload: { coffeeStores: fetchedCoffeeStores }
-          })
-          console.log({ fetchedCoffeeStores });
-        } catch(err) {
-          console.log(err);
+            payload: { coffeeStores }
+          });
+          setCoffeeStoresError(null);
+        } catch(error) {
+          setCoffeeStoresError(error.message);
+          console.error({ error });
         }
       }
     }
@@ -58,6 +60,7 @@ export default function Home(props) {
           onClick={onClickBannerBtnHandler} 
         />
         {locationErrorMsg && <p>Something went wrong: {locationErrorMsg}</p>}
+        {coffeeStoresError && <p>Something went wrong: {coffeeStoresError}</p>}
         <div className={styles.heroImage}>
           <Image src="/images/hero-image.png" width={700} height={400} alt="Hero Image" />
         </div>

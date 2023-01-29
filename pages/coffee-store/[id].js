@@ -10,63 +10,72 @@ import { fetchCoffeeStores } from '../../lib/coffee-stores';
 import { StoreContext } from '../../store/store-context';
 import { isEmpty } from '../../utils/util';
 
-export async function getStaticProps(staticProps) {
-  const coffeeStores = await fetchCoffeeStores();
-
-  const coffeeStoreById = coffeeStores.find((coffeeStore) => {
-    const params = staticProps.params;
-    return coffeeStore.id.toString() === params.id;
-  });
-
-  return {
-    props: {
-      coffeeStore: coffeeStoreById ? coffeeStoreById : {}
-    },
-  };
-}
-
-export async function getStaticPaths() {
-  const coffeeStores = await fetchCoffeeStores();
-  
-  const paths = coffeeStores.map((coffeeStore) => {
-    return {
-      params: { id: coffeeStore.id.toString() },
-    };
-  });
-
-  return {
-    paths,
-    fallback: true,
-  };
-}
-
-function CoffeeStore (initialProps) {
+function CoffeeStore(initialProps) {
   const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore || {});
   const router = useRouter();
-
-  if (router.isFallback) {
-    return <div> Loading...</div>;
-  }
-
   const id = router.query.id;
   const { state: { coffeeStores } } = useContext(StoreContext);
 
+  // https://stackoverflow.com/questions/72238175/why-useeffect-running-twice-and-how-to-handle-it-well-in-react/72238236#72238236
   useEffect(() => {
-    if (isEmpty(initialProps.coffeeStore)) {
+    const abortController = new AbortController();
+
+    async function handleCreateCoffeeStore(coffeeStore) {
+      try {
+        const { id, name, voting, imgUrl, neighbourhood, address } = coffeeStore;
+        console.log('fetching');
+  
+        const response = await fetch('/api/createCoffeeStore', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id,
+            name,
+            voting: voting || 0,
+            imgUrl,
+            neighbourhood: neighbourhood || '',
+            address: address || '',
+          }),
+          signal: abortController.signal
+        });
+  
+        const dbCoffeeStore = await response.json();
+        console.log(dbCoffeeStore)
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          /* Logic for non-aborted error handling goes here. */
+          console.error('Could not save Coffee Store in database', error);
+        }
+      }
+    };
+
+    if (initialProps.coffeeStore && isEmpty(initialProps.coffeeStore)) {
       if (coffeeStores.length > 0) {
-        const coffeeStoreById = coffeeStores.find((coffeeStore) => {
+        const coffeeStoreFromContext = coffeeStores.find((coffeeStore) => {
           return coffeeStore.id.toString() === id; //dynamic id
         });
-        setCoffeeStore(coffeeStoreById);
+
+        setCoffeeStore(coffeeStoreFromContext);
+        handleCreateCoffeeStore(coffeeStoreFromContext);
       }
+    } else {
+      handleCreateCoffeeStore(coffeeStore);
     }
-  }, [id, initialProps.coffeeStore, coffeeStores]);
+
+    return () => abortController.abort();
+  }, []);
 
   const { address, neighbourhood, name,  imgUrl } = coffeeStore;
 
   function handleUpVoteButton () {
-    console.log("handleUpVoteButton");
+    console.log('handleUpVoteButton');
   };
+
+  if (router.isFallback) {
+    return <div> Loading...</div>;
+  }
   
   return (
     <div className={styles.layout}>
@@ -121,3 +130,33 @@ function CoffeeStore (initialProps) {
 };
 
 export default CoffeeStore;
+
+export async function getStaticProps(staticProps) {
+  const coffeeStores = await fetchCoffeeStores();
+
+  const coffeeStoreById = coffeeStores.find((coffeeStore) => {
+    const params = staticProps.params;
+    return coffeeStore.id.toString() === params.id;
+  });
+
+  return {
+    props: {
+      coffeeStore: coffeeStoreById ? coffeeStoreById : {}
+    },
+  };
+}
+
+export async function getStaticPaths() {
+  const coffeeStores = await fetchCoffeeStores();
+  
+  const paths = coffeeStores.map((coffeeStore) => {
+    return {
+      params: { id: coffeeStore.id.toString() },
+    };
+  });
+
+  return {
+    paths,
+    fallback: true,
+  };
+}
