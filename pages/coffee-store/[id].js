@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useContext, useState, useEffect } from 'react';
+import useSWR from 'swr';
 import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -16,14 +17,13 @@ function CoffeeStore(initialProps) {
   const id = router.query.id;
   const { state: { coffeeStores } } = useContext(StoreContext);
 
-  // https://stackoverflow.com/questions/72238175/why-useeffect-running-twice-and-how-to-handle-it-well-in-react/72238236#72238236
+  //https://stackoverflow.com/questions/72238175/why-useeffect-running-twice-and-how-to-handle-it-well-in-react/72238236#72238236
   useEffect(() => {
     const abortController = new AbortController();
 
     async function handleCreateCoffeeStore(coffeeStore) {
       try {
         const { id, name, voting, imgUrl, neighbourhood, address } = coffeeStore;
-        console.log('fetching');
   
         const response = await fetch('/api/createCoffeeStore', {
           method: 'POST',
@@ -42,9 +42,8 @@ function CoffeeStore(initialProps) {
         });
   
         const dbCoffeeStore = await response.json();
-        console.log(dbCoffeeStore)
       } catch (error) {
-        if (error.name !== "AbortError") {
+        if (error.name !== 'AbortError') {
           /* Logic for non-aborted error handling goes here. */
           console.error('Could not save Coffee Store in database', error);
         }
@@ -61,20 +60,53 @@ function CoffeeStore(initialProps) {
         handleCreateCoffeeStore(coffeeStoreFromContext);
       }
     } else {
-      handleCreateCoffeeStore(coffeeStore);
+      handleCreateCoffeeStore(initialProps.coffeeStore);
     }
 
     return () => abortController.abort();
   }, []);
 
   const { address, neighbourhood, name,  imgUrl } = coffeeStore;
+  const [votingCount, setVotingCount] = useState(0);
 
-  function handleUpVoteButton () {
-    console.log('handleUpVoteButton');
+  // SWR part
+  const fetcher = (url) => fetch(url).then((res) => res.json());;
+  const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
+  
+  useEffect(() => {
+    if (data) {
+      setCoffeeStore(data);
+      setVotingCount(data.voting);
+    }
+  }, [data]);
+
+  async function handleUpVoteButton() {
+    try {
+      const response = await fetch('/api/upVoteCoffeeStore', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+        }),
+      });
+
+      const dbCoffeeStore = await response.json();
+      let count = votingCount + 1;
+      setVotingCount(count);
+
+    } catch (error) {
+      console.error('Could not upvote Coffee Store in database', error);
+    }   
   };
 
   if (router.isFallback) {
     return <div> Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Something went wrong retrieving coffee store page</div>;
   }
   
   return (
@@ -117,7 +149,7 @@ function CoffeeStore(initialProps) {
           )}
           <div className={styles.iconWrapper}>
             <Image src="/images/icons/star.svg" width="24" height="24" alt="star icon" />
-            <p className={styles.text}>1</p>
+            <p className={styles.text}>{votingCount}</p>
           </div>
 
           <button className={styles.upvoteButton} onClick={handleUpVoteButton}>

@@ -21,6 +21,9 @@
   margin-bottom: 0.5rem /* 8px */;
   font-weight: 700;
 }
+.backToHomeLink:hover {
+  color:rgb(113, 119, 182)
+}
 
 .nameWrapper {
   margin-bottom: 1rem /* 16px */;

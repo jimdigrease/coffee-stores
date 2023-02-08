@@ -7,15 +7,21 @@ export async function connectDB() {
   return client;
 }
 
-export async function insertDocument(client, collection, document) {
-  const db = client.db();
-  const result = await db.collection(collection).insertOne(document);
-  return result;
-}
-
 export async function findDocumentByFilter(client, collection, filter) {
   const db = client.db();
   const document = await db.collection(collection).findOne(filter);
 
   return document;
 };
+
+export async function insertDocument(client, collection, document) {
+  const db = client.db();
+  const result = await db.collection(collection).insertOne(document);
+  return result;
+}
+
+export async function updateDocument(client, collection, filter, fields) {
+  const db = client.db();
+  const result = await db.collection(collection).updateOne(filter, fields);
+  return result;
+}
