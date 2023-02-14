@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useContext, useState, useEffect } from 'react';
+import { Fragment, useContext, useState, useEffect } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -101,19 +101,37 @@ function CoffeeStore(initialProps) {
     }   
   };
 
+  let pageHeadData = (
+    <Head>
+      <title>{name} - Coffee Connoisseur</title>
+      <meta 
+        name="description"
+        content={`The page of ${name} venue on the Coffee Connoisseur site`}
+      />
+    </Head>
+  );
+
   if (router.isFallback) {
-    return <div> Loading...</div>;
+    return (
+      <Fragment>
+        {pageHeadData}
+        <div> Loading...</div>
+      </Fragment>
+    );
   }
 
   if (error) {
-    return <div>Something went wrong retrieving coffee store page</div>;
+    return (
+      <Fragment>
+        {pageHeadData}
+        <div>Something went wrong retrieving coffee store page</div>
+      </Fragment>
+    );
   }
   
   return (
     <div className={styles.layout}>
-      <Head>
-        <title>{name}</title>
-      </Head>
+      {pageHeadData}
       <div className={styles.container}>
         <div className={styles.col1}>
           <div className={styles.backToHomeLink}>

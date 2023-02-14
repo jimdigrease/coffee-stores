@@ -52,8 +52,7 @@ export default function Home(props) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Coffee Connoisseur</title>
-        <meta name="description" content="Coffee Connoisseur is the site where you can find all of your beloved coffe-shops and places to rest." />
+        <title>{coffeeStores.length > 0 ? 'Coffee stores near you' : 'Home' } - Coffee Connoisseur</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
